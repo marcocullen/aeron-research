@@ -1,0 +1,103 @@
+services:
+  router1:
+    platform: linux/amd64
+    privileged: true
+    build: .
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./:/app
+    ipc: host
+    shm_size: '1g'
+    networks:
+      network_a:
+        ipv4_address: 172.16.1.1
+      network_b:
+        ipv4_address: 172.16.2.1
+    command: >
+      sh -c "
+          sysctl -w net.ipv4.ip_forward=1 &&        
+          tail -f /dev/null
+        "
+
+  publisher:
+    platform: linux/amd64
+    privileged: true
+    build: .
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./:/app
+    ipc: host
+    shm_size: '1g'
+    networks:
+      network_a:
+        ipv4_address: 172.16.1.10
+    depends_on:
+      - router1
+    command: >
+      sh -c "
+        ip route add 172.16.2.0/24 via 172.16.1.1 &&
+        tail -f /dev/null
+      "
+
+  subscriber1:
+    platform: linux/amd64
+    privileged: true
+    build: .
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./:/app
+    ipc: host
+    shm_size: '1g'
+    networks:
+      network_b:
+        ipv4_address: 172.16.2.11
+    depends_on:
+      - router1
+    command: >
+      sh -c "
+        ip route add 172.16.1.0/24 via 172.16.2.1 &&      
+        tail -f /dev/null
+      "
+
+  subscriber2:
+    platform: linux/amd64
+    privileged: true
+    build: .
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./:/app
+    ipc: host
+    shm_size: '1g'
+    networks:
+      network_a:
+        ipv4_address: 172.16.1.11
+    depends_on:
+      - router1
+    command: >
+      sh -c "
+        ip route add 172.16.2.0/24 via 172.16.1.1 &&
+        tail -f /dev/null
+      "
+
+networks:
+  network_a:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.1.0/24
+          gateway: 172.16.1.254
+
+  network_b:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.2.0/24
+          gateway: 172.16.2.254
