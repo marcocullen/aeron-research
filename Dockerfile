@@ -28,5 +28,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Set working directory
 WORKDIR /app
 
+RUN wget -O aeron-agent-1.47.2.jar https://repo1.maven.org/maven2/io/aeron/aeron-agent/1.47.2/aeron-agent-1.47.2.jar
+
 # Keep container running
 CMD ["/bin/bash"]

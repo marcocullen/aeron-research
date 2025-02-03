@@ -30,18 +30,16 @@ services:
       - NET_RAW
     volumes:
       - ./:/app
-    ipc: host
+#    ipc: host
     shm_size: '1g'
     networks:
       network_a:
         ipv4_address: 172.16.1.10
     depends_on:
       - router1
-    command: >
-      sh -c "
-        ip route add 172.16.2.0/24 via 172.16.1.1 &&
-        tail -f /dev/null
-      "
+    command: |
+      sh -c 'ip route add 172.16.2.0/24 via 172.16.1.1 &&
+      exec /app/run-md.sh'
 
   subscriber1:
     platform: linux/amd64
@@ -52,18 +50,16 @@ services:
       - NET_RAW
     volumes:
       - ./:/app
-    ipc: host
+#    ipc: host
     shm_size: '1g'
     networks:
       network_b:
         ipv4_address: 172.16.2.11
     depends_on:
       - router1
-    command: >
-      sh -c "
-        ip route add 172.16.1.0/24 via 172.16.2.1 &&      
-        tail -f /dev/null
-      "
+    command: |
+      sh -c 'ip route add 172.16.1.0/24 via 172.16.2.1 &&
+        exec /app/run-md.sh'
 
   subscriber2:
     platform: linux/amd64
@@ -74,18 +70,16 @@ services:
       - NET_RAW
     volumes:
       - ./:/app
-    ipc: host
+#    ipc: host
     shm_size: '1g'
     networks:
       network_a:
         ipv4_address: 172.16.1.11
     depends_on:
       - router1
-    command: >
-      sh -c "
-        ip route add 172.16.2.0/24 via 172.16.1.1 &&
-        tail -f /dev/null
-      "
+    command: |
+      sh -c 'ip route add 172.16.2.0/24 via 172.16.1.1 &&
+        exec /app/run-md.sh'
 
 networks:
   network_a:

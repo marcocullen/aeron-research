@@ -6,7 +6,7 @@ import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.starquake.config.Configuration;
 
 public class AeronDriver {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         final MediaDriver.Context ctx = new MediaDriver.Context()
                 .dirDeleteOnStart(true)
                 .dirDeleteOnShutdown(true)
@@ -15,8 +15,11 @@ public class AeronDriver {
 
         try (MediaDriver driver = MediaDriver.launch(ctx)) {
             System.out.println("MediaDriver started...");
-            Thread.sleep(30_000);
-            System.out.println("Driver alive...");
+            new ShutdownSignalBarrier().await();
+            System.out.println("MediaDriver shutting down...");
+        } catch (Exception e) {
+            System.err.println("MediaDriver error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
