@@ -30,21 +30,17 @@ graph TD
 
 ## Components
 
-### Java Classes
-
-- `Configuration.java`: Central configuration for Aeron channels and directories
-- `AeronDriver.java`: Media Driver initialization and management
-- `Publisher.java`: Message publisher implementation
-- `Subscriber.java`: Message subscriber implementation
-
 ### Infrastructure
 
 - `Dockerfile`: Ubuntu-based image with Java, networking tools, and monitoring capabilities
 - `docker-compose.yml`: Multi-container setup with custom networks
 - Shell scripts for running components:
   - `run-md.sh`: Media Driver startup
+  - `run-pingpong-sub1.sh`: RTT Subscriber1 startup
+  - `run-pingpong-pub1.sh`: RTT Publisher->Subscriber1 startup
   - `run-publisher.sh`: Publisher startup
   - `run-subscriber.sh`: Subscriber startup
+
 
 ## Network Configuration
 
@@ -77,28 +73,29 @@ Built-in capabilities for:
 
 1. Build the project:
 ```bash
-./gradlew shadowJar
+./gradlew build
 ```
 
 2. Start the containers:
 ```bash
-docker-compose up -d
+docker-compose up
 ```
 
-3. On each container, start the Media Driver:
+2a. Log into each container using 'docker compose'
+```bash
+docker compose exec subscriber1 bash
+docker compose exec publisher bash
+```
+
+4. Start rtt subscriber1:
 ```bash
 cd /app/scripts
-./run-md.sh
-```
-
-4. Start subscribers:
-```bash
-./run-subscriber.sh
+./run-pingpong-sub1.sh
 ```
 
 5. Start publisher:
 ```bash
-./run-publisher.sh
+./run-pingpong-pub1.sh
 ```
 
 ## Monitoring
@@ -115,7 +112,7 @@ java --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
 
 ## Architecture Notes
 
-- Uses shared memory (`/dev/shm/aeron`) for Media Driver communication
+- Uses shared memory (`/dev/shm/aeron-${SERVICE_NAME}`) for Media Driver communication
 - Cross-network routing enabled via Docker networks
 - UDP messaging on port 20121
 - Dedicated thread mode for Media Driver
@@ -128,5 +125,4 @@ java --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
 
 ## Known Limitations
 
-- Media Driver timeouts require proper shutdown handling
-- Client liveness monitoring needed for production use
+- can always be more badass
