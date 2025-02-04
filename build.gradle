@@ -1,7 +1,16 @@
+buildscript {
+    ext {
+        SBE_VERSION = '1.34.1'
+        AERON_VERSION = '1.47.2'
+    }
+}
+
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'  // Add shadow plugin
 }
+
+def generatedDir = layout.buildDirectory.dir('generated-src/sbe')
 
 group = 'org.starquake'
 version = '1.0-SNAPSHOT'
@@ -11,13 +20,49 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.aeron:aeron-driver:1.47.2'
+    implementation "uk.co.real-logic:sbe-tool:${SBE_VERSION}"
+    implementation "io.aeron:aeron-client:${AERON_VERSION}"
+    implementation "io.aeron:aeron-driver:${AERON_VERSION}"
+    implementation "io.aeron:aeron-agent:${AERON_VERSION}"
     implementation 'org.agrona:agrona:2.0.1'
-    implementation 'io.aeron:aeron-all:1.47.2'
-    implementation "io.aeron:aeron-agent:1.47.2"
+    implementation 'org.hdrhistogram:HdrHistogram:2.1.12'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+}
+
+tasks.register('generateMessages', JavaExec) {
+    description = 'Generates SBE message classes'
+    group = 'build'
+
+    inputs.files('src/main/resources/messages.xml', 'src/main/resources/sbe/sbe.xsd')
+    outputs.dir(generatedDir)
+
+    classpath = sourceSets.main.compileClasspath
+    mainClass = 'uk.co.real_logic.sbe.SbeTool'
+
+    systemProperties = [
+            'sbe.output.dir': generatedDir.get().asFile.absolutePath,
+            'sbe.target.language': 'Java',
+            'sbe.validation.stop.on.error': 'true',
+            'sbe.validation.xsd': 'src/main/resources/sbe/sbe.xsd'
+    ]
+
+    args = ['src/main/resources/messages.xml']
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += generatedDir
+        }
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn tasks.named('generateMessages')
 }
 
 tasks.build.dependsOn tasks.shadowJar

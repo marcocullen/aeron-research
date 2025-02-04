@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   package="com.cmcmarkets.aeron.messages"
+                   id="1"
+                   version="1"
+                   semanticVersion="1.0"
+                   description="Market Data Messages">
+    <types>
+        <composite name="messageHeader">
+            <type name="blockLength" primitiveType="uint16"/>
+            <type name="templateId" primitiveType="uint16"/>
+            <type name="schemaId" primitiveType="uint16"/>
+            <type name="version" primitiveType="uint16"/>
+        </composite>
+        <type name="symbol" primitiveType="char" length="8" characterEncoding="US-ASCII"/>
+    </types>
+
+    <sbe:message name="MarketData" id="1" description="Market data update">
+        <field name="timestamp" id="1" type="uint64"/>
+        <field name="symbol" id="2" type="symbol"/>
+        <field name="price" id="3" type="float"/>
+        <field name="quantity" id="4" type="uint32"/>
+        <field name="tradeId" id="5" type="uint64"/>
+    </sbe:message>
+</sbe:messageSchema>
