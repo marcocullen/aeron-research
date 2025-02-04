@@ -41,7 +41,7 @@ services:
       - SERVICE_NAME=publisher
     command: |
       sh -c 'ip route add 172.16.2.0/24 via 172.16.1.1 &&
-      exec /app/run-md.sh'
+      exec /app/scripts/run-md.sh'
 
   subscriber1:
     platform: linux/amd64
@@ -63,7 +63,7 @@ services:
       - router1
     command: |
       sh -c 'ip route add 172.16.1.0/24 via 172.16.2.1 &&
-        exec /app/run-md.sh'
+        exec /app/scripts/run-md.sh'
 
   subscriber2:
     platform: linux/amd64
@@ -85,7 +85,7 @@ services:
       - router1
     command: |
       sh -c 'ip route add 172.16.2.0/24 via 172.16.1.1 &&
-        exec /app/run-md.sh'
+        exec /app/scripts/run-md.sh'
 
 networks:
   network_a:

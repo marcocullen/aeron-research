@@ -30,7 +30,7 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
 tasks.register('generateMessages', JavaExec) {
@@ -69,4 +69,52 @@ tasks.build.dependsOn tasks.shadowJar
 
 test {
     useJUnitPlatform()
+}
+
+class DeploymentConfig {
+    String hostname = "set-target-hostname-please"
+    String username = "set-a-user"
+    String targetDir = "/var/tmp"
+}
+
+extensions.create("deployConfig", DeploymentConfig)
+
+tasks.register('packageForDeployment', Tar) {
+    dependsOn shadowJar // Ensure the fat jar is built
+    compression = Compression.GZIP
+    archiveExtension = "tgz"
+
+    from("$projectDir") {
+        include "scripts/**"
+        include "agent-jar/**"
+    }
+
+    from("$buildDir") {
+        include "libs/**"
+    }
+
+    destinationDirectory = file("$buildDir/dist")
+    archiveFileName = "deployment-bundle.tgz"
+}
+
+tasks.register('scpDeploy', Exec) {
+    dependsOn packageForDeployment
+
+    doFirst {
+        def config = project.deployConfig
+        def host = project.findProperty('targetHost') ?: config.hostname
+        def user = project.findProperty('user') ?: config.username
+
+        commandLine 'sh', '-c', """
+            scp -o StrictHostKeyChecking=no \
+                ${packageForDeployment.outputs.files.singleFile} \
+                ${user}@${host}:${config.targetDir}/
+        """
+
+        println "Deploying to ${host}..."
+    }
+
+    doLast {
+        println "Deployment bundle transferred successfully!"
+    }
 }
