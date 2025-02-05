@@ -98,17 +98,18 @@ public class PingPongSubscriber implements Agent, FragmentHandler {
     }
 
     public static void main(String[] args) {
-        if (args.length != 3) {
+        if (args.length != 4) {
             System.out.println("Usage: PingPongSubscriber <hostname> <port> <aeron-dir>");
             System.exit(1);
         }
 
         // Subscriber (172.16.2.11) configuration
         // For receiving pings: bind to our IP
-        final String subscribeChannel = String.format("aeron:udp?endpoint=172.16.2.11:%d", Integer.parseInt(args[1]));
-
+        final String subscribeChannel = String.format("aeron:udp?endpoint=%s:%d",args[3], Integer.parseInt(args[1]));
+        System.out.printf("Sub channel: %s%n", subscribeChannel);
         // For sending pongs: bind to our IP, send to publisher's IP (args[0])
-        final String publishChannel = String.format("aeron:udp?endpoint=172.16.1.10:%d|interface=172.16.2.11", Integer.parseInt(args[1]) + 1);
+        final String publishChannel = String.format("aeron:udp?endpoint=%s:%d|interface=%s",args[0], Integer.parseInt(args[1]) + 1, args[3]);
+        System.out.printf("Pub channel: %s%n", publishChannel);
         final String aeronDir = args[2];
 
         final Aeron.Context aeronCtx = new Aeron.Context()
@@ -121,7 +122,7 @@ public class PingPongSubscriber implements Agent, FragmentHandler {
 
             // Wait for publication to connect
             while (!publication.isConnected()) {
-                Thread.sleep(100);
+                Thread.sleep(1000);
                 System.out.println("Waiting for publication to connect...");
             }
             System.out.println("Publication connected!");

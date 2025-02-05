@@ -9,17 +9,17 @@ import java.util.concurrent.TimeUnit;
 
 public class PingPongPublisherMain {
     public static void main(String[] args) {
-        if (args.length != 3) {
+        if (args.length != 4) {
             System.out.println("Usage: PingPongPublisherMain <hostname> <port> <aeron-dir>");
             System.exit(1);
         }
 
         // Publisher (172.16.1.10) configuration
         // For sending pings: bind to our IP, send to subscriber's IP
-        final String publishChannel = String.format("aeron:udp?endpoint=%s:%d|interface=172.16.1.10", args[0], Integer.parseInt(args[1]));
+        final String publishChannel = String.format("aeron:udp?endpoint=%s:%d|interface=%s", args[0], Integer.parseInt(args[1]), args[3]);
 
         // For receiving pongs: bind to our IP
-        final String subscribeChannel = String.format("aeron:udp?endpoint=172.16.1.10:%d", Integer.parseInt(args[1]) + 1);
+        final String subscribeChannel = String.format("aeron:udp?endpoint=%s:%d", args[3], Integer.parseInt(args[1]) + 1);
 
         System.out.println("Publishing to: " + publishChannel);
         System.out.println("Subscribing to: " + subscribeChannel);
