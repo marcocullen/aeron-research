@@ -6,19 +6,35 @@ This project demonstrates Aeron UDP messaging across containerized networks with
 
 ```mermaid
 graph TD
-  subgraph Network A [Network 172.16.1.0/24]
-    P[Publisher<br>172.16.1.10] --> S2[Subscriber 2<br>172.16.1.11]
-    P --> R1[Router<br>172.16.1.1/172.16.2.1]
+  subgraph Network_A[Network 172.16.1.0/24]
+    P[Publisher<br/>IP: 172.16.1.10<br/>MC Group: 239.255.0.1]
+    S2[Subscriber 2<br/>IP: 172.16.1.11<br/>MC Group: 239.255.0.1]
   end
 
-  subgraph Network B [Network 172.16.2.0/24]
-    R1 --> S1[Subscriber 1<br>172.16.2.11]
-  end
+subgraph Router[SMCRoute Router]
+R[Router<br/>eth0: 172.16.1.1<br/>eth1: 172.16.2.1<br/>MC Forward: eth0 ↔ eth1]
+end
 
-  style P fill:#f9f,stroke:#333,stroke-width:2px
-  style S1 fill:#9ff,stroke:#333,stroke-width:2px
-  style S2 fill:#9ff,stroke:#333,stroke-width:2px
-  style R1 fill:#ff9,stroke:#333,stroke-width:2px
+subgraph Network_B[Network 172.16.2.0/24]
+S1[Subscriber 1<br/>IP: 172.16.2.11<br/>MC Group: 239.255.0.1]
+end
+
+P --- |eth0| R
+S2 --- |eth0| R
+R --- |eth1| S1
+
+P -.-> |MC: 239.255.0.1| S2
+P -.-> |MC: 239.255.0.1| R
+R -.-> |MC: 239.255.0.1| S1
+
+style P fill:#f9f,stroke:#333,stroke-width:2px
+style S1 fill:#9ff,stroke:#333,stroke-width:2px
+style S2 fill:#9ff,stroke:#333,stroke-width:2px
+style R fill:#ff9,stroke:#333,stroke-width:2px
+
+classDef default font-family:monospace
+classDef network fill:#f5f5f5,stroke:#666,stroke-width:2px
+class Network_A,Network_B network
 ```
 
 ## Project Structure
@@ -52,6 +68,22 @@ graph TD
 - **Network B**: 172.16.2.0/24
   - Subscriber 1: 172.16.2.11
   - Router Interface: 172.16.2.1
+
+### Multicast configuration
+
+- Multicast routing is statically configured on the router with https://github.com/troglobit/smcroute
+- The configuration is volume mapped in via the folder ```config/smcroute.conf``` to ```/etc/smcroute.conf```
+- the ethernet adapters on the router are named 
+  - eth0
+  - eth1
+- in the order the networks are defined, that is to say: 
+  - eth0 interface is in network_a 
+  - eth1 interface is in network_b
+
+- default ttl on multicast is 1 unless set by the producer or the router.
+- For publisher1 to reach subscriber1, we need a ttl>=2
+- This can be configured on the aeron publication channel
+  - ``aeron:udp?endpoint=239.255.0.1:40456|ttl=2``
 
 ## Build and Dependencies
 

@@ -7,7 +7,8 @@ services:
       - NET_ADMIN
       - NET_RAW
     volumes:
-      - ./:/app
+      - ./config:/etc/smcroute/
+      - ./:/app/
     ipc: host
     shm_size: '1g'
     networks:
@@ -17,7 +18,8 @@ services:
         ipv4_address: 172.16.2.1
     command: >
       sh -c "
-          sysctl -w net.ipv4.ip_forward=1 &&        
+          sysctl -w net.ipv4.ip_forward=1 &&
+          smcrouted -f /etc/smcroute/smcroute.conf -n &&
           tail -f /dev/null
         "
 
@@ -90,6 +92,8 @@ services:
 networks:
   network_a:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_multicast: "true"
     ipam:
       config:
         - subnet: 172.16.1.0/24
@@ -97,6 +101,8 @@ networks:
 
   network_b:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_multicast: "true"
     ipam:
       config:
         - subnet: 172.16.2.0/24
